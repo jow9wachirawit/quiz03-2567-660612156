@@ -7,33 +7,46 @@ export const GET = async () => {
   readDB();
   return NextResponse.json({
     ok: true,
-    //rooms:
-    //totalRooms:
+    rooms: (<DB>DB).rooms,
+    totalRooms: (<DB>DB).rooms.length
   });
 };
 
 export const POST = async (request: NextRequest) => {
   const payload = checkToken();
 
-  // return NextResponse.json(
-  //   {
-  //     ok: false,
-  //     message: "Invalid token",
-  //   },
-  //   { status: 401 }
-  // );
+  if(!payload) {
+    return NextResponse.json(
+      {
+        ok: false,
+        message: "Invalid token",
+      },
+      { status: 401 }
+    );
+  }
 
+  const body = await request.json();
+  const { roomName } = body;
+  
   readDB();
+  const room = (<DB>DB).rooms.find((x) => x.roomName === roomName)
 
-  // return NextResponse.json(
-  //   {
-  //     ok: false,
-  //     message: `Room ${"replace this with room name"} already exists`,
-  //   },
-  //   { status: 400 }
-  // );
+  if(room){
+    return NextResponse.json(
+      {
+        ok: false,
+        message: `Room ${roomName} already exists`,
+      },
+      { status: 400 }
+    );
+  }
+
 
   const roomId = nanoid();
+  (<DB>DB).rooms.push({
+    roomId,
+    roomName,
+  });
 
   //call writeDB after modifying Database
   writeDB();
@@ -41,6 +54,6 @@ export const POST = async (request: NextRequest) => {
   return NextResponse.json({
     ok: true,
     //roomId,
-    message: `Room ${"replace this with room name"} has been created`,
+    message: `Room ${roomName} has been created`,
   });
 };
